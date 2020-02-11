@@ -15,9 +15,11 @@ public class SchedulerTaskRunner {
     }
 
     public void start() {
-        runTask();
-        while (!queue.isEmpty()) {
+        if (!shouldStop) {
             runTask();
+            while (!queue.isEmpty()) {
+                runTask();
+            }
         }
     }
 
