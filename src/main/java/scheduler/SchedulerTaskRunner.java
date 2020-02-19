@@ -4,33 +4,25 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 
 public class SchedulerTaskRunner {
+    private long delay;
     private long period;
     private Queue<Runnable> queue;
-    private Runnable task;
     private boolean shouldStop = false;
 
-    SchedulerTaskRunner(long period) {
+    public SchedulerTaskRunner(long delay, long period) {
         this.queue = new ArrayDeque<>();
+        this.delay = delay;
         this.period = period;
     }
 
-    public void start() {
-        if (!shouldStop) {
-            runTask();
-            while (!queue.isEmpty()) {
-                runTask();
-            }
-        }
+    public void scheduleTask(Runnable task, long delay, long period) throws InterruptedException {
+        this.delay = delay;
+        this.period = period;
+        addTask(task);
+        this.startExecuting();
     }
 
-    public void addTask(Runnable task) {
-        if (this.task == null) {
-            this.task = createTask(task);
-        }
-        queue.add(this.task);
-    }
-
-    public void stop() {
+    public void makeStop() {
         shouldStop = true;
     }
 
@@ -45,10 +37,27 @@ public class SchedulerTaskRunner {
         };
     }
 
+    private void addTask(Runnable task) {
+        queue.add(createTask(task));
+    }
+
+    private void startExecuting() throws InterruptedException {
+        Thread.sleep(delay);
+        if (!shouldStop) {
+            runTask();
+            while (!queue.isEmpty()) {
+                runTask();
+            }
+        }
+    }
+
     private void runTask() {
-        queue.remove().run();
+        Runnable task = queue.remove();
+        task.run();
         if (!shouldStop) {
             addTask(task);
+        } else {
+            Thread.currentThread().interrupt();
         }
     }
 }
