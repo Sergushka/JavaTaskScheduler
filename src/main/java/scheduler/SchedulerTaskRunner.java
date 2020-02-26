@@ -3,7 +3,7 @@ package scheduler;
 import java.util.ArrayDeque;
 import java.util.Queue;
 
-public class SchedulerTaskRunner {
+public class SchedulerTaskRunner extends Thread {
     private long delay;
     private long period;
     private Queue<Runnable> queue;
@@ -15,11 +15,10 @@ public class SchedulerTaskRunner {
         this.period = period;
     }
 
-    public void scheduleTask(Runnable task, long delay, long period) throws InterruptedException {
+    public void scheduleTask(Runnable task, long delay, long period) {
         this.delay = delay;
         this.period = period;
         addTask(task);
-        this.startExecuting();
     }
 
     public void makeStop() {
@@ -41,8 +40,13 @@ public class SchedulerTaskRunner {
         queue.add(createTask(task));
     }
 
-    private void startExecuting() throws InterruptedException {
-        Thread.sleep(delay);
+    @Override
+    public void run() {
+        try {
+            Thread.sleep(delay);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         if (!shouldStop) {
             runTask();
             while (!queue.isEmpty()) {
